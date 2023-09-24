@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	
+
 	"terraform-provider-violet/internal/violet"
 )
 
@@ -22,7 +24,7 @@ func NewWebhookResource() resource.Resource {
 	return &WebhookResource{}
 }
 
-type WebhookResource struct{
+type WebhookResource struct {
 	client *violet.VioletClient
 }
 
@@ -43,7 +45,7 @@ func (r *WebhookResource) Configure(_ context.Context, req resource.ConfigureReq
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *hashicups.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-			)
+		)
 
 		return
 	}
@@ -73,9 +75,15 @@ func (r *WebhookResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			},
 			"event": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"remote_endpoint": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"status": schema.StringAttribute{
 				Computed: true,
@@ -98,18 +106,18 @@ func (r *WebhookResource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	tflog.Info(ctx, "create", map[string]interface{}{
-		"event": plan.Event.ValueString(),
+		"event":           plan.Event.ValueString(),
 		"remote_endpoint": plan.RemoteEndpoint.ValueString(),
 	})
-	
+
 	input := violet.CreateWebhookInput{
-		Event : plan.Event.ValueString(),
-		RemoteEndpoint : plan.RemoteEndpoint.ValueString(),
+		Event:          plan.Event.ValueString(),
+		RemoteEndpoint: plan.RemoteEndpoint.ValueString(),
 	}
 	webhook := r.client.CreateWebhook(ctx, input)
-	
+
 	state := WebhookResourceModel{
 		Id:               types.Int64Value(webhook.Id),
 		AppId:            types.Int64Value(webhook.AppId),
@@ -119,7 +127,7 @@ func (r *WebhookResource) Create(ctx context.Context, req resource.CreateRequest
 		DateCreated:      types.StringValue(webhook.DateCreated),
 		DateLastModified: types.StringValue(webhook.DateLastModified),
 	}
-	
+
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -135,7 +143,7 @@ func (r *WebhookResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	id := oldState.Id.ValueInt64()
 
 	tflog.Info(ctx, "Read webhook resource", map[string]interface{}{
@@ -153,7 +161,7 @@ func (r *WebhookResource) Read(ctx context.Context, req resource.ReadRequest, re
 		DateCreated:      types.StringValue(webhook.DateCreated),
 		DateLastModified: types.StringValue(webhook.DateLastModified),
 	}
-	
+
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -179,6 +187,6 @@ func (r *WebhookResource) Delete(ctx context.Context, req resource.DeleteRequest
 	tflog.Info(ctx, "Delete webhook resource", map[string]interface{}{
 		"id": id,
 	})
-	
+
 	r.client.DeleteWebhook(ctx, id)
 }

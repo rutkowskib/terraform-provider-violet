@@ -17,3 +17,7 @@ data "violet_webhook" "example" {
     id = 2214
 }
 
+resource "violet_webhook" "webhook" {
+  event = "OFFER_UPDATED"
+  remote_endpoint = "https://test.com/"
+}

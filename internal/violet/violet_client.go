@@ -30,9 +30,9 @@ type VioletWebhook struct {
 	DateLastModified string
 }
 
-type violetWebhookResponse struct{
-	Id               int64 `json:"id"`
-	AppId            int64 `json:"app_id"`
+type violetWebhookResponse struct {
+	Id               int64  `json:"id"`
+	AppId            int64  `json:"app_id"`
 	Event            string `json:"event"`
 	RemoteEndpoint   string `json:"remote_endpoint"`
 	Status           string `json:"status"`
@@ -45,21 +45,21 @@ func (c *VioletClient) Login(ctx context.Context) {
 	"username": "%s",
 	"password": "%s"
 	}`, c.Username, c.Password))
-	
+
 	res := c.makeRequest(ctx, "POST", "login", body)
-	
+
 	type loginResponse struct {
 		Token string `json:"token"`
 	}
 
 	var data loginResponse
-	
+
 	err := json.Unmarshal(res, &data)
 	if err != nil {
 		// Handle error
 		return
 	}
-	
+
 	c.Token = data.Token
 }
 
@@ -73,15 +73,15 @@ func (c *VioletClient) GetWebhook(ctx context.Context, id int64) VioletWebhook {
 	json.Unmarshal(res, &data)
 
 	tflog.Info(ctx, "data", map[string]any{
-		"data":  data,
-		"res": string(res),
-		})
+		"data": data,
+		"res":  string(res),
+	})
 
 	return VioletWebhook(data)
 }
 
 type CreateWebhookInput struct {
-	Event string
+	Event          string
 	RemoteEndpoint string
 }
 
@@ -93,7 +93,7 @@ func (c *VioletClient) CreateWebhook(ctx context.Context, input CreateWebhookInp
 	}`, input.Event, input.RemoteEndpoint))
 
 	tflog.Info(ctx, "Making create webhook request", map[string]any{
-		"event": input.Event,
+		"event":           input.Event,
 		"remote_endpoint": input.RemoteEndpoint,
 	})
 
@@ -105,8 +105,8 @@ func (c *VioletClient) CreateWebhook(ctx context.Context, input CreateWebhookInp
 	json.Unmarshal(res, &data)
 
 	tflog.Info(ctx, "data", map[string]any{
-		"data":  data,
-		"res": string(res),
+		"data": data,
+		"res":  string(res),
 	})
 
 	return VioletWebhook(data)
@@ -124,15 +124,15 @@ func (c *VioletClient) DeleteWebhook(ctx context.Context, id int64) {
 }
 
 func (c *VioletClient) makeRequest(ctx context.Context, method string, path string, requestBody []byte) []byte {
-	request, err := http.NewRequest(method, c.BaseUrl + path, bytes.NewBuffer(requestBody))
+	request, err := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(requestBody))
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("X-Violet-App-Id", c.AppId)
 	request.Header.Set("X-Violet-App-Secret", c.AppSecret)
-	
-	if (c.Token != "") {
-		request.Header.Set("X-Violet-Token", c.Token)		
+
+	if c.Token != "" {
+		request.Header.Set("X-Violet-Token", c.Token)
 	}
-	
+
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
@@ -146,6 +146,6 @@ func (c *VioletClient) makeRequest(ctx context.Context, method string, path stri
 		"headers": response.Header,
 		"body":    string(body),
 	})
-	
+
 	return body
 }
