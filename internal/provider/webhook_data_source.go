@@ -93,11 +93,13 @@ func (d *webhookDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	tflog.Info(ctx, "read", map[string]interface{}{
-		"data": data,
+	id := data.Id.ValueInt64()
+
+	tflog.Info(ctx, "Read webhookDataSource", map[string]interface{}{
+		"id": id,
 	})
 
-	webhook := d.client.GetWebhook(ctx)
+	webhook := d.client.GetWebhook(ctx, id)
 
 	state := webhookModel{
 		Id:               types.Int64Value(webhook.Id),

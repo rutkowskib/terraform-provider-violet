@@ -30,6 +30,16 @@ type VioletWebhook struct {
 	DateLastModified string
 }
 
+type violetWebhookResponse struct{
+	Id               int64 `json:"id"`
+	AppId            int64 `json:"app_id"`
+	Event            string `json:"event"`
+	RemoteEndpoint   string `json:"remote_endpoint"`
+	Status           string `json:"status"`
+	DateCreated      string `json:"date_created"`
+	DateLastModified string `json:"date_last_modified"`
+}
+
 func (c *VioletClient) Login(ctx context.Context) {
 	var body = []byte(fmt.Sprintf(`{
 	"username": "%s",
@@ -53,31 +63,64 @@ func (c *VioletClient) Login(ctx context.Context) {
 	c.Token = data.Token
 }
 
-func (c *VioletClient) GetWebhook(ctx context.Context) VioletWebhook {
-	path := fmt.Sprintf("events/webhooks/%s", "1366")
+func (c *VioletClient) GetWebhook(ctx context.Context, id int64) VioletWebhook {
+	path := fmt.Sprintf("events/webhooks/%d", id)
 	res := c.makeRequest(ctx, "GET", path, nil)
 
-	type violetWebhookResponse struct{
-		Id               int64 `json:"id"`
-		AppId            int64 `json:"app_id"`
-		Event            string `json:"event"`
-		RemoteEndpoint   string `json:"remote_endpoint"`
-		Status           string `json:"status"`
-		DateCreated      string `json:"date_created"`
-		DateLastModified string `json:"date_last_modified"`
-	}
-	
 	var data violetWebhookResponse
 
 	// TODO handle error
 	json.Unmarshal(res, &data)
-	
+
 	tflog.Info(ctx, "data", map[string]any{
 		"data":  data,
 		"res": string(res),
 		})
-	
+
 	return VioletWebhook(data)
+}
+
+type CreateWebhookInput struct {
+	Event string
+	RemoteEndpoint string
+}
+
+func (c *VioletClient) CreateWebhook(ctx context.Context, input CreateWebhookInput) VioletWebhook {
+	path := fmt.Sprintf("apps/%s/webhooks", c.AppId)
+	body := []byte(fmt.Sprintf(`{
+		"event": "%s",
+		"remote_endpoint": "%s"
+	}`, input.Event, input.RemoteEndpoint))
+
+	tflog.Info(ctx, "Making create webhook request", map[string]any{
+		"event": input.Event,
+		"remote_endpoint": input.RemoteEndpoint,
+	})
+
+	res := c.makeRequest(ctx, "POST", path, body)
+
+	var data violetWebhookResponse
+
+	// TODO handle error
+	json.Unmarshal(res, &data)
+
+	tflog.Info(ctx, "data", map[string]any{
+		"data":  data,
+		"res": string(res),
+	})
+
+	return VioletWebhook(data)
+}
+
+func (c *VioletClient) DeleteWebhook(ctx context.Context, id int64) {
+	tflog.Info(ctx, "Deleting webhook", map[string]any{
+		"id": id,
+	})
+
+	path := fmt.Sprintf("apps/%s/webhooks/%d", c.AppId, id)
+	c.makeRequest(ctx, "DELETE", path, nil)
+
+	tflog.Info(ctx, fmt.Sprint("Webhook %d deleted", id))
 }
 
 func (c *VioletClient) makeRequest(ctx context.Context, method string, path string, requestBody []byte) []byte {
