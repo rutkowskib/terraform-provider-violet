@@ -21,3 +21,8 @@ resource "violet_webhook" "webhook" {
   event = "OFFER_UPDATED"
   remote_endpoint = "https://test.com/"
 }
+
+resource "violet_webhook" "imported" {
+    event = "OFFER_UPDATED"
+    remote_endpoint = "https://test.com"
+}

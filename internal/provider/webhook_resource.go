@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -10,13 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"terraform-provider-violet/internal/violet"
+	"github.com/rutkowskib/terraform-provider-violet/internal/violet"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &WebhookResource{}
-	_ resource.ResourceWithConfigure = &WebhookResource{}
+	_ resource.Resource                = &WebhookResource{}
+	_ resource.ResourceWithConfigure   = &WebhookResource{}
+	_ resource.ResourceWithImportState = &WebhookResource{}
 )
 
 // NewWebhookResource is a helper function to simplify the provider implementation.
@@ -96,6 +99,16 @@ func (r *WebhookResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			},
 		},
 	}
+}
+
+func (r *WebhookResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	id, _ := strconv.Atoi(req.ID)
+	state := WebhookResourceModel{
+		Id: types.Int64Value(int64(id)),
+	}
+
+	resp.State.Set(ctx, state)
 }
 
 // Create creates the resource and sets the initial Terraform state.

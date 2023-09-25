@@ -1,4 +1,4 @@
-module terraform-provider-violet
+module github.com/rutkowskib/terraform-provider-violet
 
 go 1.19
 

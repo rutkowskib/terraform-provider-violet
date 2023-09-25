@@ -3,7 +3,7 @@ package provider
 import (
 	"context"
 	"os"
-	"terraform-provider-violet/internal/violet"
+	"github.com/rutkowskib/terraform-provider-violet/internal/violet"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
