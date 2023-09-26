@@ -55,17 +55,21 @@ func (p *violetProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 		Attributes: map[string]schema.Attribute{
 			"username": schema.StringAttribute{
 				Optional: true,
+				Description: "Violet user username",
 			},
 			"password": schema.StringAttribute{
 				Optional:  true,
 				Sensitive: true,
+				Description: "Violet user password",
 			},
 			"app_id": schema.StringAttribute{
 				Optional: true,
+				Description: "Violet App Id",
 			},
 			"app_secret": schema.StringAttribute{
 				Optional:  true,
 				Sensitive: true,
+				Description: "Violet App Secret",
 			},
 		},
 	}

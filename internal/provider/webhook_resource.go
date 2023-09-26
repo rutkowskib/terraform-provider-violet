@@ -69,33 +69,41 @@ type WebhookResourceModel struct {
 // Schema defines the schema for the resource.
 func (r *WebhookResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Resource to manage Violet webhook",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				Computed: true,
+				Description: "Webhook id",
 			},
 			"app_id": schema.Int64Attribute{
 				Computed: true,
+				Description: "App Id of application this webhook belongs to",
 			},
 			"event": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Event webhook will be subscribed to",
 			},
 			"remote_endpoint": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Endpoint that webhook will be publishing to",
 			},
 			"status": schema.StringAttribute{
 				Computed: true,
+				Description: "Status of webhook",
 			},
 			"date_created": schema.StringAttribute{
 				Computed: true,
+				Description: "Creation date of webhook",
 			},
 			"date_last_modified": schema.StringAttribute{
 				Computed: true,
+				Description: "Date of last modification of the webhook",
 			},
 		},
 	}
