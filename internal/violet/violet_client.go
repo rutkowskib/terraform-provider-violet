@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -69,8 +69,13 @@ func (c *VioletClient) GetWebhook(ctx context.Context, id int64) VioletWebhook {
 
 	var data violetWebhookResponse
 
-	// TODO handle error
-	json.Unmarshal(res, &data)
+	err := json.Unmarshal(res, &data)
+
+	if err != nil {
+		tflog.Error(ctx, "Error parsing GetWebhook data", map[string]any{
+			"res": res,
+		})
+	}
 
 	tflog.Info(ctx, "data", map[string]any{
 		"data": data,
@@ -101,8 +106,14 @@ func (c *VioletClient) CreateWebhook(ctx context.Context, input CreateWebhookInp
 
 	var data violetWebhookResponse
 
-	// TODO handle error
-	json.Unmarshal(res, &data)
+	err := json.Unmarshal(res, &data)
+
+	if err != nil {
+		tflog.Error(ctx, "Error parsing GetWebhook data", map[string]any{
+			"res": res,
+		})
+		panic(err)
+	}
 
 	tflog.Info(ctx, "data", map[string]any{
 		"data": data,
@@ -120,11 +131,19 @@ func (c *VioletClient) DeleteWebhook(ctx context.Context, id int64) {
 	path := fmt.Sprintf("apps/%s/webhooks/%d", c.AppId, id)
 	c.makeRequest(ctx, "DELETE", path, nil)
 
-	tflog.Info(ctx, fmt.Sprint("Webhook %d deleted", id))
+	tflog.Info(ctx, fmt.Sprintf("Webhook %d deleted", id))
 }
 
 func (c *VioletClient) makeRequest(ctx context.Context, method string, path string, requestBody []byte) []byte {
 	request, err := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(requestBody))
+	if err != nil {
+		tflog.Error(ctx, "Error creating request", map[string]any{
+			"method": method,
+			"path":   path,
+		})
+		panic(err)
+	}
+
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("X-Violet-App-Id", c.AppId)
 	request.Header.Set("X-Violet-App-Secret", c.AppSecret)
@@ -140,7 +159,7 @@ func (c *VioletClient) makeRequest(ctx context.Context, method string, path stri
 	}
 	defer response.Body.Close()
 
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	tflog.Info(ctx, "response", map[string]any{
 		"status":  response.Status,
 		"headers": response.Header,

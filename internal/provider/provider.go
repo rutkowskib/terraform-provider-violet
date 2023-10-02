@@ -2,8 +2,8 @@ package provider
 
 import (
 	"context"
-	"os"
 	"github.com/rutkowskib/terraform-provider-violet/internal/violet"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -54,21 +54,21 @@ func (p *violetProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"username": schema.StringAttribute{
-				Optional: true,
+				Optional:    true,
 				Description: "Violet user username",
 			},
 			"password": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "Violet user password",
 			},
 			"app_id": schema.StringAttribute{
-				Optional: true,
+				Optional:    true,
 				Description: "Violet App Id",
 			},
 			"app_secret": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "Violet App Secret",
 			},
 		},

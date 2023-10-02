@@ -61,31 +61,31 @@ func (d *webhookDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 		Description: "Data source to get data of existing Violet webhook",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				Required: true,
+				Required:    true,
 				Description: "Webhook id",
 			},
 			"app_id": schema.Int64Attribute{
-				Computed: true,
+				Computed:    true,
 				Description: "App Id of application this webhook belongs to",
 			},
 			"event": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
 				Description: "Event webhook will be subscribed to",
 			},
 			"remote_endpoint": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
 				Description: "Endpoint that webhook will be publishing to",
 			},
 			"status": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
 				Description: "Status of webhook",
 			},
 			"date_created": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
 				Description: "Creation date of webhook",
 			},
 			"date_last_modified": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
 				Description: "Date of last modification of the webhook",
 			},
 		},
