@@ -53,6 +53,7 @@ type violetProviderModel struct {
 // Schema defines the provider-level schema for configuration data.
 func (p *violetProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Manage Violet webhooks",
 		Attributes: map[string]schema.Attribute{
 			"username": schema.StringAttribute{
 				Optional:    true,
