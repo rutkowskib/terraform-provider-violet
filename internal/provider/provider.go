@@ -47,6 +47,7 @@ type violetProviderModel struct {
 	Password  types.String `tfsdk:"password"`
 	AppId     types.String `tfsdk:"app_id"`
 	AppSecret types.String `tfsdk:"app_secret"`
+	Sandbox   types.Bool   `tfsdk:"sandbox"`
 }
 
 // Schema defines the provider-level schema for configuration data.
@@ -55,21 +56,25 @@ func (p *violetProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 		Attributes: map[string]schema.Attribute{
 			"username": schema.StringAttribute{
 				Optional:    true,
-				Description: "Violet user username",
+				Description: "Violet user username. If provided VIOLET_USERNAME environment variable will be used.",
 			},
 			"password": schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Violet user password",
+				Description: "Violet user password. If provided VIOLET_PASSWORD environment variable will be used.",
 			},
 			"app_id": schema.StringAttribute{
 				Optional:    true,
-				Description: "Violet App Id",
+				Description: "Violet App Id. If provided VIOLET_APP_ID environment variable will be used.",
 			},
 			"app_secret": schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Violet App Secret",
+				Description: "Violet App Secret. If provided VIOLET_APP_SECRET environment variable will be used.",
+			},
+			"sandbox": schema.BoolAttribute{
+				Optional: true,
+				Description: "Use Violet sandbox environment",
 			},
 		},
 	}
@@ -146,6 +151,11 @@ func (p *violetProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		appSecret = config.AppSecret.ValueString()
 	}
 
+	sandbox := false
+	if !config.Sandbox.IsNull() {
+		sandbox = config.Sandbox.ValueBool()
+	}
+
 	if username == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("username"),
@@ -186,12 +196,20 @@ func (p *violetProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
+	var baseUrl string
+	if sandbox {
+		baseUrl = "https://sandbox-api.violet.io/v1/"
+	} else {
+		baseUrl = "https://api.violet.io/v1/"
+	}
+
+
 	client := violet.VioletClient{
 		Username:  username,
 		Password:  password,
 		AppId:     appId,
 		AppSecret: appSecret,
-		BaseUrl:   "https://sandbox-api.violet.io/v1/",
+		BaseUrl:   baseUrl,
 	}
 	client.Login(ctx)
 

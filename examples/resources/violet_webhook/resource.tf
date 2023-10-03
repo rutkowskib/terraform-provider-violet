@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     violet = {
-      source = "hashicorp.com/edu/violet"
+      source = "rutkowskib/violet"
     }
   }
 }

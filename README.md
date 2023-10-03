@@ -1,18 +1,6 @@
-# Terraform Provider Scaffolding (Terraform Plugin Framework)
+# Terraform Violet Provider
 
-_This template repository is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework). The template repository built on the [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk) can be found at [terraform-provider-scaffolding](https://github.com/hashicorp/terraform-provider-scaffolding). See [Which SDK Should I Use?](https://developer.hashicorp.com/terraform/plugin/framework-benefits) in the Terraform documentation for additional information._
-
-This repository is a *template* for a [Terraform](https://www.terraform.io) provider. It is intended as a starting point for creating Terraform providers, containing:
-
-- A resource and a data source (`internal/provider/`),
-- Examples (`examples/`) and generated documentation (`docs/`),
-- Miscellaneous meta files.
-
-These files contain boilerplate code that you will need to edit to create your own Terraform provider. Tutorials for creating Terraform providers can be found on the [HashiCorp Developer](https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework) platform. _Terraform Plugin Framework specific guides are titled accordingly._
-
-Please see the [GitHub template repository documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template) for how to create a new repository from this template on GitHub.
-
-Once you've written your provider, you'll want to [publish it on the Terraform Registry](https://developer.hashicorp.com/terraform/registry/providers/publishing) so that others can use it.
+This provider allows managing [Violet](https://violet.io/) webhooks.  
 
 ## Requirements
 
@@ -45,7 +33,44 @@ Then commit the changes to `go.mod` and `go.sum`.
 
 ## Using the provider
 
-Fill this in for each provider
+### Credentails
+
+To use a provider you need to provide Violet *username*, *password*, *app_id* and *app_secret*. If you dont want to define them in tfvars file to
+avoid accidental commiting to repository you can expose them through environmental variables.
+
+```shell
+export VIOLET_USERNAME=username
+export VIOLET_PASSWORD=password
+export VIOLET_APP_SECRET=app_secret
+export VIOLET_APP_ID=app_id
+```
+
+### Minimal example
+
+The example below is a minimal usage of the provider. It defines a provider and creates a webhook.
+
+```shell
+terraform {
+    required_providers {
+        violet = {
+            source = "rutkowskib/violet"
+        }
+    }
+}
+
+provider "violet" {
+    username   = var.username
+    password   = var.password
+    app_id     = var.app_id
+    app_secret = var.app_secret
+}
+
+resource "violet_webhook" "example" {
+    event           = "OFFER_UPDATED"
+    remote_endpoint = "https://test.com/"
+}
+```
+
 
 ## Developing the Provider
 
