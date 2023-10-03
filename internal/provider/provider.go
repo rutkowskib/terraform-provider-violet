@@ -73,7 +73,7 @@ func (p *violetProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 				Description: "Violet App Secret. If provided VIOLET_APP_SECRET environment variable will be used.",
 			},
 			"sandbox": schema.BoolAttribute{
-				Optional: true,
+				Optional:    true,
 				Description: "Use Violet sandbox environment",
 			},
 		},
@@ -202,7 +202,6 @@ func (p *violetProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	} else {
 		baseUrl = "https://api.violet.io/v1/"
 	}
-
 
 	client := violet.VioletClient{
 		Username:  username,
