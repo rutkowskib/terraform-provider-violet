@@ -17,7 +17,8 @@ description: |-
 
 ### Optional
 
-- `app_id` (String) Violet App Id
-- `app_secret` (String, Sensitive) Violet App Secret
-- `password` (String, Sensitive) Violet user password
-- `username` (String) Violet user username
+- `app_id` (String) Violet App Id. If provided VIOLET_APP_ID environment variable will be used.
+- `app_secret` (String, Sensitive) Violet App Secret. If provided VIOLET_APP_SECRET environment variable will be used.
+- `password` (String, Sensitive) Violet user password. If provided VIOLET_PASSWORD environment variable will be used.
+- `sandbox` (Boolean) Use Violet sandbox environment
+- `username` (String) Violet user username. If provided VIOLET_USERNAME environment variable will be used.
