@@ -38,6 +38,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
+		Address: "registry.terraform.io/rutkowskib/violet",
 		Debug:   debug,
 	}
 
