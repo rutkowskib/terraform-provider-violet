@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -40,7 +41,7 @@ type violetWebhookResponse struct {
 	DateLastModified string `json:"date_last_modified"`
 }
 
-func (c *VioletClient) Login(ctx context.Context) {
+func (c *VioletClient) Login(ctx context.Context) error {
 	var body = []byte(fmt.Sprintf(`{
 	"username": "%s",
 	"password": "%s"
@@ -57,10 +58,16 @@ func (c *VioletClient) Login(ctx context.Context) {
 	err := json.Unmarshal(res, &data)
 	if err != nil {
 		// Handle error
-		return
+		return err
+	}
+
+	if data.Token == "" {
+		return errors.New("Error getting token. Please check provided credentials.")
 	}
 
 	c.Token = data.Token
+
+	return nil
 }
 
 func (c *VioletClient) GetWebhook(ctx context.Context, id int64) VioletWebhook {
@@ -135,6 +142,11 @@ func (c *VioletClient) DeleteWebhook(ctx context.Context, id int64) {
 }
 
 func (c *VioletClient) makeRequest(ctx context.Context, method string, path string, requestBody []byte) []byte {
+	tflog.Debug(ctx, "Sending request to Violet", map[string]any{
+		"method": method,
+		"path":   path,
+	})
+
 	request, err := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(requestBody))
 	if err != nil {
 		tflog.Error(ctx, "Error creating request", map[string]any{

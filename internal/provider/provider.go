@@ -211,7 +211,14 @@ func (p *violetProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		AppSecret: appSecret,
 		BaseUrl:   baseUrl,
 	}
-	client.Login(ctx)
+	err := client.Login(ctx)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to log into Violet",
+			"An error occurred when logging in.\n"+err.Error(),
+		)
+	}
 
 	resp.DataSourceData = &client
 	resp.ResourceData = &client
