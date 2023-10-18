@@ -137,7 +137,18 @@ func (r *WebhookResource) Create(ctx context.Context, req resource.CreateRequest
 		Event:          plan.Event.ValueString(),
 		RemoteEndpoint: plan.RemoteEndpoint.ValueString(),
 	}
-	webhook := r.client.CreateWebhook(ctx, input)
+	err, webhook := r.client.CreateWebhook(ctx, input)
+
+	if err != nil {
+		tflog.Error(ctx, "Error creating webhook data", map[string]interface{}{
+			"err": err.Error(),
+		})
+		resp.Diagnostics.AddError(
+			"Error creating Violet webhook",
+			"Creating webhook failed: "+err.Error(),
+		)
+		return
+	}
 
 	state := WebhookResourceModel{
 		Id:               types.Int64Value(webhook.Id),
@@ -171,7 +182,15 @@ func (r *WebhookResource) Read(ctx context.Context, req resource.ReadRequest, re
 		"id": id,
 	})
 
-	webhook := r.client.GetWebhook(ctx, id)
+	err, webhook := r.client.GetWebhook(ctx, id)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error reading Violet webhook id: %d", id),
+			"Get webhook failed: "+err.Error(),
+		)
+		return
+	}
 
 	state := WebhookResourceModel{
 		Id:               types.Int64Value(webhook.Id),
@@ -209,5 +228,12 @@ func (r *WebhookResource) Delete(ctx context.Context, req resource.DeleteRequest
 		"id": id,
 	})
 
-	r.client.DeleteWebhook(ctx, id)
+	err := r.client.DeleteWebhook(ctx, id)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error deleting Violet webhook id: %d", id),
+			"Delete webhook failed: "+err.Error(),
+		)
+	}
 }

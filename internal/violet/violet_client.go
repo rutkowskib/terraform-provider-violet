@@ -47,7 +47,12 @@ func (c *VioletClient) Login(ctx context.Context) error {
 	"password": "%s"
 	}`, c.Username, c.Password))
 
-	res := c.makeRequest(ctx, "POST", "login", body)
+	err, res := c.makeRequest(ctx, "POST", "login", body)
+
+	if err != nil {
+		tflog.Error(ctx, "Error making login request")
+		return err
+	}
 
 	type loginResponse struct {
 		Token string `json:"token"`
@@ -55,7 +60,7 @@ func (c *VioletClient) Login(ctx context.Context) error {
 
 	var data loginResponse
 
-	err := json.Unmarshal(res, &data)
+	err = json.Unmarshal(res, &data)
 	if err != nil {
 		// Handle error
 		return err
@@ -70,18 +75,27 @@ func (c *VioletClient) Login(ctx context.Context) error {
 	return nil
 }
 
-func (c *VioletClient) GetWebhook(ctx context.Context, id int64) VioletWebhook {
+func (c *VioletClient) GetWebhook(ctx context.Context, id int64) (error, VioletWebhook) {
 	path := fmt.Sprintf("events/webhooks/%d", id)
-	res := c.makeRequest(ctx, "GET", path, nil)
+	err, res := c.makeRequest(ctx, "GET", path, nil)
+
+	if err != nil {
+		tflog.Error(ctx, "Error getting webhook", map[string]any{
+			"res": res,
+			"err": err.Error(),
+		})
+		return err, VioletWebhook{}
+	}
 
 	var data violetWebhookResponse
 
-	err := json.Unmarshal(res, &data)
+	err = json.Unmarshal(res, &data)
 
 	if err != nil {
 		tflog.Error(ctx, "Error parsing GetWebhook data", map[string]any{
 			"res": res,
 		})
+		return err, VioletWebhook{}
 	}
 
 	tflog.Info(ctx, "data", map[string]any{
@@ -89,7 +103,7 @@ func (c *VioletClient) GetWebhook(ctx context.Context, id int64) VioletWebhook {
 		"res":  string(res),
 	})
 
-	return VioletWebhook(data)
+	return nil, VioletWebhook(data)
 }
 
 type CreateWebhookInput struct {
@@ -97,7 +111,7 @@ type CreateWebhookInput struct {
 	RemoteEndpoint string
 }
 
-func (c *VioletClient) CreateWebhook(ctx context.Context, input CreateWebhookInput) VioletWebhook {
+func (c *VioletClient) CreateWebhook(ctx context.Context, input CreateWebhookInput) (error, VioletWebhook) {
 	path := fmt.Sprintf("apps/%s/webhooks", c.AppId)
 	body := []byte(fmt.Sprintf(`{
 		"event": "%s",
@@ -109,14 +123,22 @@ func (c *VioletClient) CreateWebhook(ctx context.Context, input CreateWebhookInp
 		"remote_endpoint": input.RemoteEndpoint,
 	})
 
-	res := c.makeRequest(ctx, "POST", path, body)
+	err, res := c.makeRequest(ctx, "POST", path, body)
+
+	if err != nil {
+		tflog.Error(ctx, "Error creating webhook", map[string]any{
+			"res": res,
+			"err": err.Error(),
+		})
+		return err, VioletWebhook{}
+	}
 
 	var data violetWebhookResponse
 
-	err := json.Unmarshal(res, &data)
+	err = json.Unmarshal(res, &data)
 
 	if err != nil {
-		tflog.Error(ctx, "Error parsing GetWebhook data", map[string]any{
+		tflog.Error(ctx, "Error parsing CreateWebhook data", map[string]any{
 			"res": res,
 		})
 		panic(err)
@@ -127,24 +149,29 @@ func (c *VioletClient) CreateWebhook(ctx context.Context, input CreateWebhookInp
 		"res":  string(res),
 	})
 
-	return VioletWebhook(data)
+	return nil, VioletWebhook(data)
 }
 
-func (c *VioletClient) DeleteWebhook(ctx context.Context, id int64) {
+func (c *VioletClient) DeleteWebhook(ctx context.Context, id int64) error {
 	tflog.Info(ctx, "Deleting webhook", map[string]any{
 		"id": id,
 	})
 
 	path := fmt.Sprintf("apps/%s/webhooks/%d", c.AppId, id)
-	c.makeRequest(ctx, "DELETE", path, nil)
+	err, _ := c.makeRequest(ctx, "DELETE", path, nil)
 
-	tflog.Info(ctx, fmt.Sprintf("Webhook %d deleted", id))
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error deleting webhook %d", id))
+	} else {
+		tflog.Info(ctx, fmt.Sprintf("Webhook %d deleted successfully", id))
+	}
+	return err
 }
 
-func (c *VioletClient) makeRequest(ctx context.Context, method string, path string, requestBody []byte) []byte {
-	tflog.Debug(ctx, "Sending request to Violet", map[string]any{
+func (c *VioletClient) makeRequest(ctx context.Context, method string, path string, requestBody []byte) (error, []byte) {
+	tflog.Info(ctx, "Sending request to Violet", map[string]any{
 		"method": method,
-		"path":   path,
+		"path":   c.BaseUrl + path,
 	})
 
 	request, err := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(requestBody))
@@ -153,7 +180,7 @@ func (c *VioletClient) makeRequest(ctx context.Context, method string, path stri
 			"method": method,
 			"path":   path,
 		})
-		panic(err)
+		return err, []byte{}
 	}
 
 	request.Header.Set("Content-Type", "application/json")
@@ -167,7 +194,7 @@ func (c *VioletClient) makeRequest(ctx context.Context, method string, path stri
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		panic(err)
+		return err, []byte{}
 	}
 	defer response.Body.Close()
 
@@ -178,5 +205,9 @@ func (c *VioletClient) makeRequest(ctx context.Context, method string, path stri
 		"body":    string(body),
 	})
 
-	return body
+	if response.StatusCode >= 400 {
+		return fmt.Errorf("Error performing request. Response status %s. %s", response.Status, string(body)), []byte{}
+	}
+
+	return nil, body
 }

@@ -107,7 +107,15 @@ func (d *webhookDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		"id": id,
 	})
 
-	webhook := d.client.GetWebhook(ctx, id)
+	err, webhook := d.client.GetWebhook(ctx, id)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error reading Violet webhook id: %d", id),
+			"error getting webhook: "+err.Error(),
+		)
+		return
+	}
 
 	state := webhookModel{
 		Id:               types.Int64Value(webhook.Id),
